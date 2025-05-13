@@ -8,7 +8,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Launch CryptoGuard",
-            "program": "${workspaceFolder}/build/CryptoGuard",
+            "program": "${workspaceFolder}/CryptoGuard",
             "args": [
                 "-i",
                 "input.txt",

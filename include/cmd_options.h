@@ -3,8 +3,13 @@
 #include <boost/program_options.hpp>
 #include <string>
 #include <unordered_map>
+#include <map>
+
+#include <iostream>
 
 namespace CryptoGuard {
+
+namespace po = boost::program_options;
 
 class ProgramOptions {
 public:
@@ -17,7 +22,15 @@ public:
         CHECKSUM,
     };
 
-    bool Parse(int argc, char *argv[]);
+    enum class PARSING_ERR {
+        NO_ERROR,
+        NO_CMD,
+        INVALID_CMD,
+        NO_INPUT,
+        NO_OUTPUT,
+        NO_PASSWORD,
+    };
+    PARSING_ERR Parse(int argc, char *argv[]);
 
     COMMAND_TYPE GetCommand() const { return command_; }
     std::string GetInputFile() const { return inputFile_; }
@@ -31,12 +44,12 @@ private:
         {"decrypt", ProgramOptions::COMMAND_TYPE::DECRYPT},
         {"checksum", ProgramOptions::COMMAND_TYPE::CHECKSUM},
     };
-
     std::string inputFile_;
     std::string outputFile_;
     std::string password_;
 
-    boost::program_options::options_description desc_;
+    po::options_description desc_;
+    void PrintHelp();
 };
 
 }  // namespace CryptoGuard

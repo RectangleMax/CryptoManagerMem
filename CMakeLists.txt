@@ -38,7 +38,7 @@ target_include_directories(${PROJECT_NAME}_imp PUBLIC
 target_link_libraries(${PROJECT_NAME}_imp PRIVATE ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES})
 
 # Создаём исполняемый таргет и линкуем к нему статическую библиотеку
-add_executable(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/src/main.cpp")
+add_executable(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/src/mainCryptoGuard.cpp")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_imp)
 
 #
