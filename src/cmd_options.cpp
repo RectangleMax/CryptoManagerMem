@@ -1,5 +1,6 @@
 #include "../include/cmd_options.h"
 
+
 namespace CryptoGuard {
 
 
