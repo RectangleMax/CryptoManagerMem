@@ -15,6 +15,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wfatal-errors)
 endif()
+set(CMAKE_BUILD_TYPE Debug)  
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fno-omit-frame-pointer")
 
 # Ищем необходимые библиотеки
 find_package(OpenSSL REQUIRED)

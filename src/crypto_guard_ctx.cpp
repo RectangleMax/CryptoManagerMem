@@ -66,7 +66,7 @@ namespace CryptoGuard {
             void operator()(EVP_MD_CTX* ptr) { EVP_MD_CTX_free(ptr); }
         };
         std::unique_ptr<EVP_MD_CTX, MDCtxDeleter> MDContext(EVP_MD_CTX_new());
-
+1
         if (EVP_DigestInit_ex(MDContext.get(), EVP_sha256(), nullptr) != 1) {
             throw std::runtime_error("Ошибка подсчёта контрольной суммы: Error initializing SHA-256 digest");
         }
