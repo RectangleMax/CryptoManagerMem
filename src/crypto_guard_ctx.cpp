@@ -6,19 +6,17 @@ namespace CryptoGuard {
     struct CryptoGuardCtx::Impl {
 // Интерфейсные методы 
         void EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
-            DoCryptFileManager(inStream, outStream, password, 1);       
+            DoCryptFile(inStream, outStream, password, 1); 
         }
 
         void DecryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
-            DoCryptFileManager(inStream, outStream, password, 0);
+            DoCryptFile(inStream, outStream, password, 0);
         }
 
         std::string CalculateChecksum(std::iostream&);
 
 // Служебные методы и параметры
         void DoCryptFile(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag);
-
-        void DoCryptFileManager(std::iostream&, std::iostream&, std::string_view, int enc);        
 
         struct AesCipherParams {
             static const size_t KEY_SIZE = 32;             // AES-256 key size
@@ -47,13 +45,7 @@ namespace CryptoGuard {
     }
 
     std::string CryptoGuardCtx::CalculateChecksum(std::iostream &stream) { 
-        if (auto *pStream = dynamic_cast<std::fstream*>(&stream); pStream) {
-            return pImpl->CalculateChecksum(*pStream);
-        } else if (auto *pStream = dynamic_cast<std::stringstream*>(&stream); pStream) {
-            return pImpl->CalculateChecksum(*pStream);
-        } else {
-            throw std::runtime_error("Недопустимый тип потока ввода (iostream&) для расчёта контрольной суммы");
-        }
+        return pImpl->CalculateChecksum(stream);
     }
 
 
@@ -66,7 +58,7 @@ namespace CryptoGuard {
             void operator()(EVP_MD_CTX* ptr) { EVP_MD_CTX_free(ptr); }
         };
         std::unique_ptr<EVP_MD_CTX, MDCtxDeleter> MDContext(EVP_MD_CTX_new());
-1
+
         if (EVP_DigestInit_ex(MDContext.get(), EVP_sha256(), nullptr) != 1) {
             throw std::runtime_error("Ошибка подсчёта контрольной суммы: Error initializing SHA-256 digest");
         }
@@ -122,22 +114,6 @@ namespace CryptoGuard {
         return params;
     }
 
-
-    void Impl_::DoCryptFileManager(std::iostream &inStream, std::iostream &outStream, std::string_view password, int encrypt_flag) {
-        std::vector<std::iostream*> in_out_streams(2);
-        for (int i = 0; i < 2; ++i) {
-            in_out_streams[i] = dynamic_cast<std::stringstream*>( i == 0 ? &inStream : &outStream) ;
-            if (in_out_streams[i] == nullptr) {
-                in_out_streams[i]  = dynamic_cast<std::fstream*>( i == 0 ? &inStream : &outStream);
-                if (in_out_streams[i] == nullptr) {
-                    throw std::runtime_error("Недопустимый тип потока " + std::string( i == 0 ? "ввода" : "вывода") + " (iostream&).");
-                }
-            } 
-        }
-        Impl_::DoCryptFile(*in_out_streams[0], *in_out_streams[1], password, encrypt_flag);
-    }
-
-
     void Impl_::DoCryptFile(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag) {
         if (inStream.fail())
             throw std::runtime_error("Проблема с чтением потока ввода (файл не найден или недоступен)."); 
@@ -148,7 +124,8 @@ namespace CryptoGuard {
         std::unique_ptr<EVP_CIPHER_CTX, CipherCtxDeleter> CipherContext(EVP_CIPHER_CTX_new());
 
         auto params = CreateChiperParamsFromPassword(password);
-        EVP_CipherInit_ex(CipherContext.get(), params.cipher, nullptr, params.key.data(), params.iv.data(), encrypt_flag);       
+        if (!EVP_CipherInit_ex(CipherContext.get(), params.cipher, nullptr, params.key.data(), params.iv.data(), encrypt_flag))
+            throw std::runtime_error("Проблема с инициализацией контекста шифрования (EVP_CipherInit_ex)."); 
 
         // Подготовка к чтению/записи    
         std::vector<unsigned char>  inBuf(BUF_SIZE);

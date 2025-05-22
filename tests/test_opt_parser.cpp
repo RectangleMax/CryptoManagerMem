@@ -55,30 +55,73 @@ std::stringstream getTestData(ERR_CODE err_code) {
     return static_cast<std::stringstream>(cmd);
 }
 
-
 CryptoGuard::ProgramOptions opt;
-int num_test_cases = 6;
 
-struct TestData { int num_case; };
-class TestParam : public testing::TestWithParam<TestData> {};
-
-TEST_P(TestParam, SetInput) {
-    auto err_code = static_cast<ERR_CODE>(GetParam().num_case);
+TEST(ProgramOptionsParserTest, CorrectOptions) {
+    ERR_CODE code = ERR_CODE::NO_ERROR;
     int argc;
-    auto argv = convertIntoCharPtrArray(getTestData(err_code), argc);
-    EXPECT_EQ(err_code, opt.Parse(argc, argv.get()));
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
 }
 
-// 4. Функция генерации тестовых данных
-std::vector<TestData> GenerateTestData() {
-    std::vector<TestData> data;
-    for (int i = 0; i < num_test_cases; ++i) {
-        data.push_back({i});
-    }
-    return data;
+TEST(ProgramOptionsParserTest, ForgotCommand) {
+    ERR_CODE code = ERR_CODE::NO_CMD;
+    int argc;
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
 }
 
-// 5. Инстанцирование тестов с данными из вектора
-INSTANTIATE_TEST_SUITE_P(OptParser, TestParam,
-    testing::ValuesIn(GenerateTestData())  // Данные из вектора
-);
+TEST(ProgramOptionsParserTest, IncorrectCommand) {
+    ERR_CODE code = ERR_CODE::INVALID_CMD;
+    int argc;
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
+}
+
+TEST(ProgramOptionsParserTest, ForgotIniputOption) {
+    ERR_CODE code = ERR_CODE::NO_INPUT;
+    int argc;
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
+}
+
+TEST(ProgramOptionsParserTest, ForgotOutputOption) {
+    ERR_CODE code = ERR_CODE::NO_OUTPUT;
+    int argc;
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
+}
+
+TEST(ProgramOptionsParserTest, ForgotPassowrd) {
+    ERR_CODE code = ERR_CODE::NO_PASSWORD;
+    int argc;
+    auto argv = convertIntoCharPtrArray(getTestData(code), argc);
+    EXPECT_EQ(code, opt.Parse(argc, argv.get()));
+}
+
+
+// int num_test_cases = 6;
+
+// struct TestData { int num_case; };
+// class TestParam : public testing::TestWithParam<TestData> {};
+
+// TEST_P(TestParam, SetInput) {
+//     auto err_code = static_cast<ERR_CODE>(GetParam().num_case);
+//     int argc;
+//     auto argv = convertIntoCharPtrArray(getTestData(err_code), argc);
+//     EXPECT_EQ(err_code, opt.Parse(argc, argv.get()));
+// }
+
+// // 4. Функция генерации тестовых данных
+// std::vector<TestData> GenerateTestData() {
+//     std::vector<TestData> data;
+//     for (int i = 0; i < num_test_cases; ++i) {
+//         data.push_back({i});
+//     }
+//     return data;
+// }
+
+// // 5. Инстанцирование тестов с данными из вектора
+// INSTANTIATE_TEST_SUITE_P(OptParser, TestParam,
+//     testing::ValuesIn(GenerateTestData())  // Данные из вектора
+// );

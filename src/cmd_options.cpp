@@ -35,7 +35,7 @@ ProgramOptions::PARSING_ERR ProgramOptions::Parse(int argc, char *argv[]) {
         std::string cmdName = vm["command"].as<std::string>();
         auto it_cmd = commandMapping_.find(cmdName);
         if (it_cmd == commandMapping_.end()) {
-            errmap[PARSING_ERR::INVALID_CMD] = "Некорректное значение для опции <" + cmdName + ">. Доступные команды: encrypt, decrypt, checksum.";
+            errmap[PARSING_ERR::INVALID_CMD] = "Некорректное значение для опции <command>. Доступные команды: encrypt, decrypt, checksum.";
         } else {
             command_ = it_cmd->second;
             if ((command_ == COMMAND_TYPE::ENCRYPT)  ||  (command_ == COMMAND_TYPE::DECRYPT)) {

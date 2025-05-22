@@ -14,18 +14,18 @@ std::stringstream EncryptAndDecrypt(std::iostream& originalStream) {
     return decryptedStream;
 }
 
-TEST(EncryptDecrypt, InputSStream) {
+TEST(EncryptDecryptTest, InputSStream) {
     std::stringstream originalStream{"Text for\nencryption\0 and decryption"};
     EXPECT_EQ(originalStream.str(), EncryptAndDecrypt(originalStream).str());
 }
 
-TEST(EncryptDecrypt, InputSStreamEmtpy) {
+TEST(EncryptDecryptTest, InputSStreamEmtpy) {
     std::stringstream originalStream{""};
     EXPECT_EQ(originalStream.str(), EncryptAndDecrypt(originalStream).str());
 }
 
-TEST(EncryptDecrypt, InputFile) {
-    std::fstream originalStream("prestuplenie-i-nakazanie.txt", std::ios::binary | std::ios::in);
+TEST(EncryptDecryptTest, InputFile) {
+    std::fstream originalStream("../prestuplenie-i-nakazanie.txt", std::ios::binary | std::ios::in);
     if (!originalStream.good()) {
         std::runtime_error("При тестировании методов EncryptFile и DecryptFile возникли проблемы с загрузкой файла prestuplenie-i-nakazanie.txt");
     }
