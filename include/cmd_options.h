@@ -1,10 +1,7 @@
 #pragma once
 
 #include <boost/program_options.hpp>
-#include <string>
-#include <unordered_map>
 #include <map>
-
 #include <iostream>
 
 namespace CryptoGuard {

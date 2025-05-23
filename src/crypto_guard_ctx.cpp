@@ -77,9 +77,9 @@ namespace CryptoGuard {
                 throw std::runtime_error("Ошибка подсчёта контрольной суммы: Error updating digest");
         }
 
-        unsigned char hash[EVP_MAX_MD_SIZE];
+        std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
         unsigned int lengthOfHash = 0;
-        if (EVP_DigestFinal_ex(MDContext.get(), hash, &lengthOfHash) != 1) {
+        if (EVP_DigestFinal_ex(MDContext.get(), hash.data(), &lengthOfHash) != 1) {
             throw std::runtime_error("Ошибка подсчёта контрольной суммы: Error finalizing digest");
         }
 
