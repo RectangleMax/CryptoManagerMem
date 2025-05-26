@@ -15,6 +15,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wfatal-errors)
 endif()
+set(CMAKE_BUILD_TYPE Debug)  
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fno-omit-frame-pointer")
 
 # Ищем необходимые библиотеки
 find_package(OpenSSL REQUIRED)
@@ -38,13 +40,13 @@ target_include_directories(${PROJECT_NAME}_imp PUBLIC
 target_link_libraries(${PROJECT_NAME}_imp PRIVATE ${OPENSSL_LIBRARIES} ${Boost_LIBRARIES})
 
 # Создаём исполняемый таргет и линкуем к нему статическую библиотеку
-add_executable(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/src/main.cpp")
+add_executable(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/src/mainCryptoGuard.cpp")
 target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}_imp)
 
 #
 # Тесты
 #
-
+include(GoogleTest) # эта строчка нужна, чтобы запустить все тесты по команде ctest
 # Рекурсивно ищем все используемые в тестах .cpp файлы
 file(GLOB TEST_SRC_FILES "${CMAKE_SOURCE_DIR}/tests/*.cpp")
 
@@ -54,4 +56,6 @@ target_include_directories(${PROJECT_NAME}_tests PRIVATE ${CMAKE_CURRENT_SOURCE_
 
 # Включаем тестирование
 enable_testing()
-add_test(NAME CryptoGuard_Tests COMMAND ${PROJECT_NAME}_tests)
+# add_test(NAME CryptoGuard_Tests COMMAND ${PROJECT_NAME}_tests) # эта функция не позволяет запустить все тесты по команде ctest
+gtest_discover_tests(${PROJECT_NAME}_tests) # эта функция находит все тесты в TEST_SRC_FILES для запуска по ctest
+

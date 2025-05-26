@@ -1,6 +1,6 @@
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
-from conan.tools.files import copy, rmdir
+from conan.tools.files import copy, rmdir, save
 import os
 
 class CryptoGuardConan(ConanFile):
@@ -25,6 +25,13 @@ class CryptoGuardConan(ConanFile):
         
         tc = CMakeToolchain(self)
         tc.generate()
+
+        # Генерируем env-файл с путями
+        env_content = f"""
+export CPLUS_INCLUDE_PATH="{self.dependencies['openssl'].cpp_info.includedirs[0]}:{self.dependencies['boost'].cpp_info.includedirs[0]}:{self.dependencies['gtest'].cpp_info.includedirs[0]}"
+export LIBRARY_PATH="{self.dependencies['openssl'].cpp_info.libdirs[0]}:{self.dependencies['boost'].cpp_info.libdirs[0]}:{self.dependencies['gtest'].cpp_info.libdirs[0]}"
+                        """
+        save(self, "./conan_env.sh", env_content)
     
     def build(self):
         cmake = CMake(self)

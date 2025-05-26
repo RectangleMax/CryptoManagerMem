@@ -1,0 +1,37 @@
+#include "../include/cmd_options.h"
+#include "../include/crypto_guard_ctx.h"
+#include <stdexcept>
+#include <fstream>
+
+// "prestuplenie-i-nakazanie.txt", "temp_encrypted", "veryGoodPassword");
+
+int main(int argn, char *argv[]) {
+    CryptoGuard::ProgramOptions opt;
+    CryptoGuard::CryptoGuardCtx cryptoContext;
+    
+    if (!opt.Parse(argn, argv))
+        return 1;
+    
+    std::fstream file_input( opt.GetInputFile(),  std::ios::binary | std::ios::in);
+    std::fstream file_output;
+
+    try {
+        switch (opt.GetCommand()) {
+            case CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT:
+                file_output.open(opt.GetOutputFile(), std::ios::binary | std::ios::out | std::ios::trunc);
+                cryptoContext.EncryptFile(file_input, file_output, opt.GetPassword());
+                break;
+            case CryptoGuard::ProgramOptions::COMMAND_TYPE::DECRYPT:
+                file_output.open(opt.GetOutputFile(), std::ios::binary | std::ios::out | std::ios::trunc);
+                cryptoContext.DecryptFile(file_input, file_output, opt.GetPassword());
+                break;
+            case CryptoGuard::ProgramOptions::COMMAND_TYPE::CHECKSUM:
+                std::cout << cryptoContext.CalculateChecksum(file_input) << std::endl;
+                break;    
+        }
+    } catch(std::runtime_error& exc) {
+        std::cerr << exc.what() << std::endl;
+    }
+    return 0;
+}
+
