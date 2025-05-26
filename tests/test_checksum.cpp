@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../include/crypto_guard_ctx.h"
+#include <fstream>
 
 std::fstream getFstream1(const std::string& str) {
     return std::fstream(str, std::ios::binary | std::ios::in);

@@ -1,13 +1,7 @@
 #pragma once
-
 #include <memory>
-#include <openssl/evp.h>
-#include <fstream>
-#include <sstream>
-#include <vector>
 #include <iostream>
-#include <iomanip>
-#include <array>
+
 
 namespace CryptoGuard {
 

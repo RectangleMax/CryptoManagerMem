@@ -1,7 +1,7 @@
 #include "../include/cmd_options.h"
 #include "../include/crypto_guard_ctx.h"
 #include <stdexcept>
-// #include <filesystem>
+#include <fstream>
 
 // "prestuplenie-i-nakazanie.txt", "temp_encrypted", "veryGoodPassword");
 
@@ -9,7 +9,7 @@ int main(int argn, char *argv[]) {
     CryptoGuard::ProgramOptions opt;
     CryptoGuard::CryptoGuardCtx cryptoContext;
     
-    if (CryptoGuard::ProgramOptions::PARSING_ERR::NO_ERROR != opt.Parse(argn, argv))
+    if (!opt.Parse(argn, argv))
         return 1;
     
     std::fstream file_input( opt.GetInputFile(),  std::ios::binary | std::ios::in);

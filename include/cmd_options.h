@@ -1,7 +1,5 @@
 #pragma once
-
 #include <boost/program_options.hpp>
-#include <map>
 #include <iostream>
 
 namespace CryptoGuard {
@@ -19,15 +17,7 @@ public:
         CHECKSUM,
     };
 
-    enum class PARSING_ERR {
-        NO_ERROR,
-        NO_CMD,
-        INVALID_CMD,
-        NO_INPUT,
-        NO_OUTPUT,
-        NO_PASSWORD,
-    };
-    PARSING_ERR Parse(int argc, char *argv[]);
+    bool Parse(int argc, char *argv[]);
 
     COMMAND_TYPE GetCommand() const { return command_; }
     std::string GetInputFile() const { return inputFile_; }

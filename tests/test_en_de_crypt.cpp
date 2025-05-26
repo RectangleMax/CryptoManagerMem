@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include "../include/crypto_guard_ctx.h"
+#include <fstream>
 
 
 CryptoGuard::CryptoGuardCtx cryptoContext1;

@@ -1,22 +1,27 @@
 #include "../include/crypto_guard_ctx.h"
-
+#include <openssl/evp.h>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <iomanip>
+#include <array>
 
 namespace CryptoGuard {
 
     struct CryptoGuardCtx::Impl {
 // Интерфейсные методы 
         void EncryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
-            DoCryptFile(inStream, outStream, password, 1); 
+            EncryptOrDecrypt(inStream, outStream, password, 1); 
         }
 
         void DecryptFile(std::iostream &inStream, std::iostream &outStream, std::string_view password) {
-            DoCryptFile(inStream, outStream, password, 0);
+            EncryptOrDecrypt(inStream, outStream, password, 0);
         }
 
         std::string CalculateChecksum(std::iostream&);
 
 // Служебные методы и параметры
-        void DoCryptFile(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag);
+        void EncryptOrDecrypt(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag);
 
         struct AesCipherParams {
             static const size_t KEY_SIZE = 32;             // AES-256 key size
@@ -28,9 +33,8 @@ namespace CryptoGuard {
         };
         AesCipherParams CreateChiperParamsFromPassword(std::string_view);
 
-        size_t BUF_SIZE = 4096;
-        size_t getStreamSize(std::fstream&);
-        size_t getStreamSize(std::stringstream&);
+        static constexpr const size_t BUF_SIZE = 4096;
+        size_t getStreamSize(std::iostream&);
     };
     using Impl_ = CryptoGuardCtx::Impl;
 
@@ -65,16 +69,20 @@ namespace CryptoGuard {
 
         int i = 0;
         std::vector<unsigned char> buf(BUF_SIZE);
-        while (true) {
+        size_t stream_size = getStreamSize(stream);
+        size_t bytes_counter = 0;
+        while (bytes_counter < stream_size) {
             stream.read(reinterpret_cast<char*>(buf.data()), BUF_SIZE);
             size_t bytes_reading = stream.gcount();
-            if (!bytes_reading)
-                break;
-            if (!stream.good()  &&  !stream.eof())
+            if (bytes_reading == 0)
                 throw std::runtime_error("Проблема с чтением потока ввода."); 
+            // if (!stream.good()  &&  !stream.eof())
+            //     throw std::runtime_error("Проблема с чтением потока ввода."); 
             
             if (EVP_DigestUpdate(MDContext.get(), buf.data(), bytes_reading) != 1) 
                 throw std::runtime_error("Ошибка подсчёта контрольной суммы: Error updating digest");
+
+            bytes_counter += bytes_reading;
         }
 
         std::array<unsigned char, EVP_MAX_MD_SIZE> hash;
@@ -114,7 +122,7 @@ namespace CryptoGuard {
         return params;
     }
 
-    void Impl_::DoCryptFile(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag) {
+    void Impl_::EncryptOrDecrypt(std::iostream& inStream, std::iostream& outStream, std::string_view password, int encrypt_flag) {
         if (inStream.fail())
             throw std::runtime_error("Проблема с чтением потока ввода (файл не найден или недоступен)."); 
 
@@ -131,19 +139,18 @@ namespace CryptoGuard {
         std::vector<unsigned char>  inBuf(BUF_SIZE);
         std::vector<unsigned char> outBuf(BUF_SIZE + EVP_MAX_BLOCK_LENGTH);
 
-        while (true) {
+        size_t stream_size = getStreamSize(inStream);
+        size_t bytes_counter = 0;
+        while (bytes_counter < stream_size) {
             // Чтение входного буфера            
             inStream.read(reinterpret_cast<char*>(inBuf.data()), BUF_SIZE);
-            int bytes_read = inStream.gcount();
-            if (!bytes_read)
-                break; // Входной буфер закончен 
-            if (!inStream.good()  &&  !inStream.eof()) { 
+            int bytes_reading = inStream.gcount();
+            if (bytes_reading == 0)
                 throw std::runtime_error("Проблема с чтением потока ввода."); 
-            }
 
             // Шифрование / дешифрование
             int bytes_encrypted = 0;
-            if (!EVP_CipherUpdate(CipherContext.get(), outBuf.data(), &bytes_encrypted, inBuf.data(), bytes_read)) {
+            if (!EVP_CipherUpdate(CipherContext.get(), outBuf.data(), &bytes_encrypted, inBuf.data(), bytes_reading)) {
                 throw std::runtime_error("Ошибка при шифровании данных.");
             }
 
@@ -152,6 +159,8 @@ namespace CryptoGuard {
                 throw std::runtime_error("Проблема с записью в поток вывода."); 
             }
             outStream.write(reinterpret_cast<const char*>(outBuf.data()), bytes_encrypted);
+            
+            bytes_counter += bytes_reading;
         }
 
         int final_length = 0;
@@ -160,15 +169,13 @@ namespace CryptoGuard {
         }
         outStream.write(reinterpret_cast<const char*>(outBuf.data()), final_length);
     }
-
-
-    size_t getStreamSize(std::fstream& fs) {
-        fs.seekg(0, std::ios::end);
-        size_t size = fs.tellg();
+   
+    size_t Impl_::getStreamSize(std::iostream& fs) {
         fs.seekg(0, std::ios::beg);
-        return size;
-    }
-    size_t getStreamSize(std::stringstream& ss) {
-        return ss.str().size();
+        auto begin_of_file = fs.tellg();
+        fs.seekg(0, std::ios::end);
+        auto stream_size = std::size_t(fs.tellg() - begin_of_file);
+        fs.seekg(0, std::ios::beg);
+        return stream_size;
     }
 }  
